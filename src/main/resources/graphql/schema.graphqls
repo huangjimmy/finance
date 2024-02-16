@@ -1,0 +1,21 @@
+type StockSymbol {
+    id: ID
+    symbol: String
+    name: String
+    exchange: String
+}
+
+type Query {
+    symbolById(id: ID): StockSymbol
+    symbolBySymbol(symbol: String): [StockSymbol]
+    symbolByPrefix(prefix: String): [StockSymbol]
+    symbolByExchange(exchange: String): [StockSymbol]
+    symbolByName(name: String): [StockSymbol]
+    dualListedSymbols: [StockSymbol]
+    allSymbols: [StockSymbol]
+}
+
+
+type Mutation {
+    syncExchangeSymbols(exchange: String): [StockSymbol]
+}
