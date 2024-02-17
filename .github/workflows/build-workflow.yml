@@ -2,6 +2,7 @@ name: Build and verify finance app
 
 env:
   BUILD_PROFILE: ci
+  SPRING_PROFILES_ACTIVE: ci
 
 on:
   push:
