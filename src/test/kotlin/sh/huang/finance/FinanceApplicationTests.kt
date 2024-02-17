@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.env.Environment
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.EnabledIf
 import sh.huang.finance.constant.ExchangeConstant
 import sh.huang.finance.dataproviders.eodhd.EodhdApiClient
 import sh.huang.finance.generated.tables.daos.StockSymbolDao
@@ -20,7 +21,7 @@ import sh.huang.finance.service.StockHistoricalDataService
 import java.io.File
 
 @SpringBootTest
-@ActiveProfiles("test")
+@EnabledIf("#{environment.getActiveProfiles().length > 0 && {'test', 'ci'}.contains(environment.getActiveProfiles()[0])}")
 class FinanceApplicationTests {
 
 	@Autowired
