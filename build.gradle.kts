@@ -123,7 +123,7 @@ jooq {
 			name = "org.jooq.codegen.JavaGenerator"
 			database {
 				includes = "Stock_Symbol|Stock_Historical_Price|Stock_Dividends|Stock_Splits"
-				withInputSchema("PUBLIC")
+				withInputSchema("PUBLIC").withInputSchema("finance")
 			}
 			generate {
 				withDaos(true)
