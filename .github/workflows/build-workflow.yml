@@ -18,7 +18,6 @@ on:
 jobs:
   project-build:
     runs-on: ubuntu-latest
-    container: node:20-alpine3.18
     services:
       postgres:
         image: postgres
