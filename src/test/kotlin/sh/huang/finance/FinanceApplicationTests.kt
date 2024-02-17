@@ -21,7 +21,6 @@ import sh.huang.finance.service.StockHistoricalDataService
 import java.io.File
 
 @SpringBootTest
-@EnabledIf("#{environment.getActiveProfiles().length > 0 && {'test', 'ci'}.contains(environment.getActiveProfiles()[0])}")
 class FinanceApplicationTests {
 
 	@Autowired
