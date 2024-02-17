@@ -1,5 +1,8 @@
 name: Build and verify finance app
 
+env:
+  BUILD_PROFILE: ci
+
 on:
   push:
     branches: [ "main" ]
@@ -15,6 +18,18 @@ on:
 jobs:
   project-build:
     runs-on: ubuntu-latest
+    container: node:20-alpine3.18
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: finance
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 21
