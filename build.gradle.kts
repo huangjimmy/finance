@@ -8,7 +8,7 @@ fun loadProperties(file: String) {
 		val properties = Properties()
 		properties.load(FileInputStream(propertiesFile))
 		for( (k, v) in properties.entries){
-			extra[k.toString()] = if(v.toString().isEmpty()) "\"\"" else v
+			extra[k.toString()] = if (v.toString().isNotEmpty()) v else null
 		}
 	}
 }
@@ -101,13 +101,14 @@ tasks.withType<Test> {
 liquibase {
 	activities {
 		create("main") {
-			arguments = mapOf(
+			 val args = mutableMapOf(
 					"changelog-file" to "${property("spring.liquibase.change-log")}",
 					"url" to "${property("spring.datasource.url")}",
 					"username" to "${property("spring.datasource.username")}",
-					"password" to "${property("spring.datasource.password")}",
 					"searchPath" to "src/main/resources/",
 			)
+			property("spring.datasource.password").let { if(it != null) args["password"] = "$it" }
+			arguments = args
 		}
 	}
 }
@@ -117,13 +118,15 @@ jooq {
 		jdbc {
 			url = "${property("spring.datasource.url")}"
 			user = "${property("spring.datasource.username")}"
-			password = "${property("spring.datasource.password")}"
+			property("spring.datasource.password").let {
+				if(it != null) password = "$it"
+			}
 		}
 		generator {
 			name = "org.jooq.codegen.JavaGenerator"
 			database {
 				includes = "Stock_Symbol|Stock_Historical_Price|Stock_Dividends|Stock_Splits"
-				withInputSchema("PUBLIC").withInputSchema("finance")
+				withInputSchema("${property("spring.datasource.input.schema")}")
 			}
 			generate {
 				withDaos(true)
