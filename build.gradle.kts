@@ -22,6 +22,7 @@ when (buildProfile) {
 	"local" -> loadProperties("src/main/resources/application-local.properties")
 	"prod" -> loadProperties("src/main/resources/application-prod.properties")
 	"test" -> loadProperties("src/main/resources/application-test.properties")
+	"ci" -> loadProperties("src/main/resources/application-ci.properties")
 }
 
 plugins {
