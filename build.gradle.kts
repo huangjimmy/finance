@@ -8,7 +8,7 @@ fun loadProperties(file: String) {
 		val properties = Properties()
 		properties.load(FileInputStream(propertiesFile))
 		for( (k, v) in properties.entries){
-			extra[k.toString()] = v
+			extra[k.toString()] = if(v.toString().isEmpty()) "\"\"" else v
 		}
 	}
 }
@@ -105,6 +105,7 @@ liquibase {
 					"changelog-file" to "${property("spring.liquibase.change-log")}",
 					"url" to "${property("spring.datasource.url")}",
 					"username" to "${property("spring.datasource.username")}",
+					"password" to "${property("spring.datasource.password")}",
 					"searchPath" to "src/main/resources/",
 			)
 		}
