@@ -1,3 +1,4 @@
+echo "BUILD_PROFILE=${BUILD_PROFILE}"
 git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
 chmod +x ~/.asdf/asdf.sh
 ~/.asdf/asdf.sh plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
