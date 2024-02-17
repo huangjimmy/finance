@@ -1,4 +1,29 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.FileInputStream
+import java.util.*
+
+fun loadProperties(file: String) {
+	val propertiesFile = File(rootProject.projectDir, file)
+	if (propertiesFile.exists()) {
+		val properties = Properties()
+		properties.load(FileInputStream(propertiesFile))
+		for( (k, v) in properties.entries){
+			extra[k.toString()] = if (v.toString().isNotEmpty()) v else null
+		}
+	}
+}
+
+loadProperties("src/main/resources/application.properties")
+
+var buildProfile = System.getProperty("BUILD_PROFILE", "")
+if(buildProfile.isEmpty()) buildProfile = System.getenv("BUILD_PROFILE")
+extra["buildProfile"] = buildProfile
+when (buildProfile) {
+	"local" -> loadProperties("src/main/resources/application-local.properties")
+	"prod" -> loadProperties("src/main/resources/application-prod.properties")
+	"test" -> loadProperties("src/main/resources/application-test.properties")
+	"ci" -> loadProperties("src/main/resources/application-ci.properties")
+}
 
 plugins {
 	id("org.springframework.boot") version "3.2.2"
@@ -38,6 +63,7 @@ dependencies {
 	implementation("io.ktor:ktor-client-apache5:2.3.8")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
 	implementation("org.jooq:jooq:3.19.3")
+	implementation("org.postgresql:postgresql")
 	runtimeOnly("org.hsqldb:hsqldb")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework:spring-webflux")
@@ -49,8 +75,10 @@ dependencies {
 	liquibaseRuntime("org.liquibase:liquibase-core")
 	liquibaseRuntime("info.picocli:picocli:4.6.1")
 	liquibaseRuntime("org.hsqldb:hsqldb")
+	liquibaseRuntime("org.postgresql:postgresql")
 
 	jooqCodegen("org.hsqldb:hsqldb")
+	jooqCodegen("org.postgresql:postgresql")
 }
 
 dependencyManagement {
@@ -73,12 +101,14 @@ tasks.withType<Test> {
 liquibase {
 	activities {
 		create("main") {
-			arguments = mapOf(
-					"changelog-file" to "db/changelog/changelog.sql",
-					"url" to "jdbc:hsqldb:file:./data/finance",
-					"username" to "sa",
+			 val args = mutableMapOf(
+					"changelog-file" to "${property("spring.liquibase.change-log")}",
+					"url" to "${property("spring.datasource.url")}",
+					"username" to "${property("spring.datasource.username")}",
 					"searchPath" to "src/main/resources/",
 			)
+			property("spring.datasource.password").let { if(it != null) args["password"] = "$it" }
+			arguments = args
 		}
 	}
 }
@@ -86,16 +116,17 @@ liquibase {
 jooq {
 	configuration {
 		jdbc {
-			url = "jdbc:hsqldb:file:./data/finance"
-			user = "sa"
-			password = ""
+			url = "${property("spring.datasource.url")}"
+			user = "${property("spring.datasource.username")}"
+			property("spring.datasource.password").let {
+				if(it != null) password = "$it"
+			}
 		}
 		generator {
 			name = "org.jooq.codegen.JavaGenerator"
 			database {
-				name = "org.jooq.meta.hsqldb.HSQLDBDatabase"
 				includes = "Stock_Symbol|Stock_Historical_Price|Stock_Dividends|Stock_Splits"
-				withInputSchema("PUBLIC")
+				withInputSchema("${property("spring.datasource.input.schema")}")
 			}
 			generate {
 				withDaos(true)
