@@ -32,3 +32,5 @@ ALTER TABLE Stock_Symbol ADD COLUMN CURRENCY VARCHAR(10);
 ALTER TABLE Stock_Dividends ADD COLUMN CURRENCY VARCHAR(10);
 ALTER TABLE Stock_Dividends ADD COLUMN PERIOD VARCHAR(50);
 ALTER TABLE Stock_Historical_Price ADD COLUMN CURRENCY VARCHAR(10);
+-- changeset liquibase:8
+CREATE TABLE yfinance_cache (ticker VARCHAR(60) PRIMARY KEY, history BLOB, splits BLOB, dividends BLOB, expiresAt timestamp);

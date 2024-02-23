@@ -8,10 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.DependsOn
 import org.springframework.core.env.Environment
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.EnabledIf
 import sh.huang.finance.constant.ExchangeConstant
 import sh.huang.finance.dataproviders.eodhd.EodhdApiClient
 import sh.huang.finance.generated.tables.daos.StockSymbolDao
@@ -19,6 +16,11 @@ import sh.huang.finance.job.StockSymbolSyncJob
 import sh.huang.finance.service.NasdaqNyseAmexSymbolService
 import sh.huang.finance.service.StockHistoricalDataService
 import java.io.File
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.fail
 
 @SpringBootTest
 class FinanceApplicationTests {
@@ -33,11 +35,6 @@ class FinanceApplicationTests {
 	private lateinit var eodhdApiClient: EodhdApiClient
 	@Autowired
 	private lateinit var stockHistoricalDataService: StockHistoricalDataService
-	@Autowired
-	private lateinit var environment: Environment
-
-	val nasdaqApiHost = "api.nasdaq.com";
-	val nyseHost = "www.nyse.com";
 
 	private val mockEngine = MockEngine { request ->
 		when (request.url.parameters["exchange"]) {
@@ -54,15 +51,17 @@ class FinanceApplicationTests {
 						headers = headersOf(HttpHeaders.ContentType, "application/json")
 				)
 			else -> {
-				if (request.url.pathSegments.last() == "MCD.US"){
+				val ticker = request.url.pathSegments.last()
+
+				if (arrayOf("MCD.US", "AAPL.US", "AMZN.US", "MSFT.US").contains(ticker)){
 					respond(
-							content = ByteReadChannel(File("data/MCD.US.json").readText()),
+							content = ByteReadChannel(File("data/${ticker}.json").readText()),
 							status = HttpStatusCode.OK,
 							headers = headersOf(HttpHeaders.ContentType, "application/json")
 					)
 				}
 				else{
-					respond(content = "")
+					respond(content = "Forbidden", status = HttpStatusCode.Forbidden)
 				}
 			}
 		}
@@ -104,5 +103,44 @@ class FinanceApplicationTests {
 		stockHistoricalDataService.syncHistoricalPriceMCDUS()
 		val mcdPrices = stockHistoricalDataService.historicalPriceMCDUS()
 		assert(mcdPrices.size > 14000)
+	}
+
+	@Test
+	fun eodhdClientSuccess(){
+		val exchange = "US"
+		val successTickrs = arrayOf("MCD", "AAPL", "AMZN", "MSFT")
+		val failedTickers = arrayOf("SPY")
+		runBlocking {
+			val (successFetches, failedFetches) = arrayOf(successTickrs, failedTickers).map{ tickers ->
+				tickers.map { symbol ->
+					async {
+						try {
+							symbol to arrayOf(eodhdApiClient.getHistoricalData(symbol, exchange), null)
+						} catch (e: Exception) {
+							symbol to arrayOf(null, e)
+						}
+					}
+				}
+			}
+
+			val successPrices = successFetches.awaitAll()
+			val failedPrices = failedFetches.awaitAll()
+			assertAll(*successPrices.map { pair -> {
+					val (result, exception) = pair.second
+					val ticker = pair.first
+					assert(successTickrs.contains(ticker))
+					assert(result != null) { "expecting non null result for $ticker but received null with $exception" }
+					assert(exception == null) { "expecting no exception for $ticker but received $exception" }
+				}
+			}.toTypedArray())
+			assertAll(*failedPrices.map { pair -> {
+				val (result, exception) = pair.second
+				val ticker = pair.first
+				assert(failedTickers.contains(ticker))
+				assert(result == null) { "expecting null result for $ticker but received $result" }
+				assert(exception != null) { "expecting exception for $ticker but received null" }
+			}
+			}.toTypedArray())
+		}
 	}
 }

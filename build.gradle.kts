@@ -125,7 +125,7 @@ jooq {
 		generator {
 			name = "org.jooq.codegen.JavaGenerator"
 			database {
-				includes = "Stock_Symbol|Stock_Historical_Price|Stock_Dividends|Stock_Splits"
+				includes = "Stock_Symbol|Stock_Historical_Price|Stock_Dividends|Stock_Splits|yfinance_cache"
 				withInputSchema("${property("spring.datasource.input.schema")}")
 			}
 			generate {

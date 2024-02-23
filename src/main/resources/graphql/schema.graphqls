@@ -5,6 +5,37 @@ type StockSymbol {
     exchange: String
 }
 
+type StockHistoricalPrice {
+    id: ID
+    symbol: String
+    name: String
+    exchange: String
+    open: Float
+    high: Float
+    low: Float
+    close: Float
+    volume: Float
+}
+
+type StockSplits {
+    id: ID
+    symbol: String
+    name: String
+    exchange: String
+    tradingDay: String
+    before: Float
+    after: Float
+}
+
+type StockDividends {
+    id: ID
+    symbol: String
+    name: String
+    exchange: String
+    tradingDay: String
+    dividendPerShare: Float
+}
+
 type Query {
     symbolById(id: ID): StockSymbol
     symbolBySymbol(symbol: String): [StockSymbol]
@@ -13,9 +44,13 @@ type Query {
     symbolByName(name: String): [StockSymbol]
     dualListedSymbols: [StockSymbol]
     allSymbols: [StockSymbol]
+    historicalPriceOf(symbol: String, exchange: String): [StockHistoricalPrice]
+    splitHistoryOf(symbol: String, exchange: String): [StockSplits]
+    dividendHistoryOf(symbol: String, exchange: String): [StockDividends]
 }
 
 
 type Mutation {
     syncExchangeSymbols(exchange: String): [StockSymbol]
+    syncHistoryOf(symbol: String, exchange: String): String
 }

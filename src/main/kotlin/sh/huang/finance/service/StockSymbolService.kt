@@ -17,7 +17,7 @@ class StockSymbolService {
     }
 
     fun findStockSymbol(symbol: String?, prefix: String?, exchange: String?, name: String?): List<StockSymbol> {
-        var condition = STOCK_SYMBOL.ID.gt(0)
+        var condition = STOCK_SYMBOL.ID.ge(0)
         symbol?.let {
             condition = condition.and(STOCK_SYMBOL.SYMBOL.eq(symbol));
         }

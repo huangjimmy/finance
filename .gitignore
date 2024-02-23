@@ -49,3 +49,8 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### .env ###
+.env
+.venv
+__pycache__
