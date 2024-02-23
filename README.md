@@ -37,9 +37,11 @@ poetry install --no-root
 
 ## Database
 
-The **finance** app uses hsqldb file database
+The **finance** app uses hsqldb file database or PostgreSQL database
 
 To run database migration
+
+For hsql file database
 
 ```bash
  ./gradlew update
@@ -48,6 +50,17 @@ To run database migration
 To generate jOOQ POJOs, DAOs
 ```bash
  ./gradlew jooqCodegen
+```
+
+For PostgreSQL database running at localhost:5432 
+
+```bash
+SPRING_PROFILES_ACTIVE=local ./gradlew update
+```
+
+To generate jOOQ POJOs, DAOs
+```bash
+SPRING_PROFILES_ACTIVE=local  ./gradlew jooqCodegen
 ```
 
 ## Build
