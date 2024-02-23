@@ -3,9 +3,12 @@ package sh.huang.finance.dataproviders.eodhd
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.util.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import sh.huang.finance.constant.ExchangeConstant
 
@@ -13,6 +16,9 @@ import sh.huang.finance.constant.ExchangeConstant
 class EodhdApiClient {
     @Autowired
     lateinit var httpClient: HttpClient
+
+    @Value("\${eodhd.api.key}")
+    lateinit var eodhdApiKey: String
     private fun exchangeEodhd(exchange: String): String {
         return when(exchange){
             ExchangeConstant.NYSE -> "US"
@@ -25,7 +31,7 @@ class EodhdApiClient {
     private fun apiToken(ticker: String): String {
         return when(ticker) {
             "MCD.US" -> "demo"
-            else -> "demo"
+            else -> eodhdApiKey
         }
     }
 
@@ -40,10 +46,11 @@ class EodhdApiClient {
                 append("sec-ch-ua", "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"")
                 append("sec-ch-ua-mobile", "?0")
                 append("sec-ch-ua-platform", "\"macOS\"")
+                append("cache-control", "max-age=0")
                 append("sec-fetch-dest", "empty")
                 append("sec-fetch-mode", "cors")
                 append("sec-fetch-site", "same-site")
-                append("Referer", "https://www.nasdaq.com/")
+                append("Referer", "https://eodhd.com/")
                 append("Referrer-Policy", "strict-origin-when-cross-origin")
             }
         }
