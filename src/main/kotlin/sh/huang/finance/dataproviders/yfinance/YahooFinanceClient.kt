@@ -5,12 +5,15 @@ import com.google.gson.reflect.TypeToken
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import sh.huang.finance.constant.ExchangeConstant
 import sh.huang.finance.generated.tables.daos.YfinanceCacheDao
 import sh.huang.finance.generated.tables.pojos.YfinanceCache
+import sh.huang.finance.job.StockHistorySyncJob
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -25,6 +28,8 @@ class YahooFinanceClient {
 
     @Value("\${yahoo.finance.url}")
     private lateinit var yfinanceUrl: String
+
+    private val log: Logger = LoggerFactory.getLogger(YahooFinanceClient::class.java)
 
     private fun yahooStockSymbol(symbol: String, exchange: String): String {
         return when(exchange){
@@ -51,14 +56,19 @@ class YahooFinanceClient {
 
         if (cache.isPresent) {
             val cacheContent = cache.get()
-            history = gson.fromJson<List<History>>(String(cacheContent.history), historyListType::class.java)
-            splits = gson.fromJson<List<Split>>(String(cacheContent.splits), splitListType::class.java)
-            dividends = gson.fromJson<List<Dividend>>(String(cacheContent.dividends), dividendListType::class.java)
+            try {
+                history = gson.fromJson<List<History>>(String(cacheContent.history), historyListType)
+                splits = gson.fromJson<List<Split>>(String(cacheContent.splits), splitListType)
+                dividends = gson.fromJson<List<Dividend>>(String(cacheContent.dividends), dividendListType)
 
-            if (Instant.now() < cacheContent.expiresat.toInstant(ZoneOffset.UTC)) {
-                //return cache
-                val yahooData = YahooFinanceStockData(dividends, history, splits)
-                return yahooData
+                if (Instant.now() < cacheContent.expiresat.toInstant(ZoneOffset.UTC)) {
+                    //return cache
+                    val yahooData = YahooFinanceStockData(dividends, history, splits)
+                    return yahooData
+                }
+            }catch (e: Exception) {
+                // fallback to no cache
+                log.error("failed to get cache for $ticker due to $e")
             }
         }
 

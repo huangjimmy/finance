@@ -4,11 +4,14 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.env.Environment
 import sh.huang.finance.constant.ExchangeConstant
 import sh.huang.finance.dataproviders.eodhd.EodhdApiClient
 import sh.huang.finance.generated.tables.daos.StockSymbolDao
@@ -16,11 +19,6 @@ import sh.huang.finance.job.StockSymbolSyncJob
 import sh.huang.finance.service.NasdaqNyseAmexSymbolService
 import sh.huang.finance.service.StockHistoricalDataService
 import java.io.File
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.assertAll
-import org.junit.jupiter.api.fail
 
 @SpringBootTest
 class FinanceApplicationTests {
