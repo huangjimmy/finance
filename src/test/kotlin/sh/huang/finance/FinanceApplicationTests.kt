@@ -129,16 +129,16 @@ class FinanceApplicationTests {
 					val (result, exception) = pair.second
 					val ticker = pair.first
 					assert(successTickrs.contains(ticker))
-					assert(result != null)
-					assert(exception == null)
+					assert(result != null) { "expecting non null result for $ticker but received null" }
+					assert(exception == null) { "expecting no exception for $ticker but received $exception" }
 				}
 			}.toTypedArray())
 			assertAll(*failedPrices.map { pair -> {
 				val (result, exception) = pair.second
 				val ticker = pair.first
 				assert(failedTickers.contains(ticker))
-				assert(result == null)
-				assert(exception != null)
+				assert(result == null) { "expecting null result for $ticker but received $result" }
+				assert(exception != null) { "expecting exception for $ticker but received null" }
 			}
 			}.toTypedArray())
 		}
