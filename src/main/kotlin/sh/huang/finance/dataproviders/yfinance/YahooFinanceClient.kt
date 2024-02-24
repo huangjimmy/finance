@@ -5,6 +5,8 @@ import com.google.gson.reflect.TypeToken
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +15,8 @@ import org.springframework.stereotype.Component
 import sh.huang.finance.constant.ExchangeConstant
 import sh.huang.finance.generated.tables.daos.YfinanceCacheDao
 import sh.huang.finance.generated.tables.pojos.YfinanceCache
-import sh.huang.finance.job.StockHistorySyncJob
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -72,7 +75,10 @@ class YahooFinanceClient {
             }
         }
 
-        val url = "${yfinanceUrl}/ticker/${ticker}"
+        val encodedTicker = withContext(Dispatchers.IO) {
+            URLEncoder.encode(ticker, StandardCharsets.UTF_8.toString())
+        }
+        val url = "${yfinanceUrl}/ticker/${encodedTicker}"
 
         val response = httpClient.get(url)
         val json = response.bodyAsText()
